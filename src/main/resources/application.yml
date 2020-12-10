@@ -4,6 +4,6 @@ spring:
   application:
     name: course_notifications
   datasource:
-    url: jdbc:mysql://my-user:+X%j5AW47@127.0.0.1:3306/subscript?serverVersion=8.0
+    url: jdbc:mysql://127.0.0.1:3306/subscript?serverVersion=8.0
     username: my-user
     password: +X%j5AW47
