@@ -44,7 +44,7 @@ public class ConsumersComponent {
             log.info("received from container" + num + " : "  + message);
         });
         KafkaMessageListenerContainer<Integer, String> container = createContainer(containerProps);
-        container.setBeanName("testAuto");
+        container.setBeanName("testAuto" + num);
         container.start();
         return container;
     }
@@ -62,7 +62,7 @@ public class ConsumersComponent {
     private Map<String, Object> consumerProps() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "main_group");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "main_group" + containers.size());
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
