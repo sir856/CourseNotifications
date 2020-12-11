@@ -38,7 +38,7 @@ public class JsonArrayConverter implements AttributeConverter<List<String>, Stri
     private List<String> convertToStringList(List list) {
         List<String> stringList = new ArrayList<>();
         for (Object item : list) {
-            stringList.add((String) item);
+            stringList.add(item.toString());
         }
         return stringList;
     }
