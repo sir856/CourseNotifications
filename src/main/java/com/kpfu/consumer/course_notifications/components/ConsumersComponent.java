@@ -3,7 +3,9 @@ package com.kpfu.consumer.course_notifications.components;
 import com.kpfu.consumer.course_notifications.model.Subscription;
 import com.kpfu.consumer.course_notifications.repository.SubscriptionRepository;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.TopicPartition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +17,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class ConsumersComponent {
@@ -26,6 +25,7 @@ public class ConsumersComponent {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private Map<Integer, KafkaMessageListenerContainer<Integer, String>> containers = new HashMap<>();
     private final SubscriptionRepository subscriptionRepository;
+    private boolean inited = false;
 
     @Autowired
     public ConsumersComponent(SubscriptionRepository subscriptionRepository) {
@@ -44,6 +44,8 @@ public class ConsumersComponent {
                     subscription.getTags().toArray(new String[0])));
         }
 
+        inited = true;
+
     }
 
     private KafkaMessageListenerContainer<Integer, String> startContainer(int userId, MessageListener<Integer, String> listener, String... topics) {
@@ -53,6 +55,7 @@ public class ConsumersComponent {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "main_group" + userId);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
@@ -62,12 +65,24 @@ public class ConsumersComponent {
 
         DefaultKafkaConsumerFactory<Integer, String> cf =
                 new DefaultKafkaConsumerFactory<>(props);
+        if (inited) {
+            cf.createConsumer().seekToEnd(getTopicPartitions(topics));
+        }
         KafkaMessageListenerContainer<Integer, String> container =
                 new KafkaMessageListenerContainer<>(cf, containerProps);
 
         container.setBeanName("container" + userId);
         container.start();
         return container;
+    }
+
+    private Collection<TopicPartition> getTopicPartitions(String... topics) {
+        Collection<TopicPartition> topicPartitions = new ArrayList<>();
+        for (String topic : topics) {
+            topicPartitions.add(new TopicPartition(topic, 0));
+        }
+
+        return topicPartitions;
     }
 
     public void newSubscription(Subscription subscription) {

@@ -4,7 +4,6 @@ import com.kpfu.consumer.course_notifications.components.ConsumersComponent;
 import com.kpfu.consumer.course_notifications.model.Subscription;
 import com.kpfu.consumer.course_notifications.repository.SubscriptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +22,7 @@ public class SubscriptionsController {
         this.subscriptionRepository = subscriptionRepository;
     }
 
-    @PostMapping("/subscript")
+    @PostMapping(value = "/subscript", consumes = "")
     public Subscription subscript(@RequestBody Subscription subscription) {
         subscription = subscriptionRepository.save(subscription);
         consumersComponent.newSubscription(subscription);
