@@ -70,7 +70,7 @@ public class ConsumersComponent {
         return container;
     }
 
-    private void newSubscripion(Subscription subscription) {
+    public void newSubscription(Subscription subscription) {
         KafkaMessageListenerContainer<Integer, String> container = containers.get(subscription.getUserId());
 
         if (container != null) {
