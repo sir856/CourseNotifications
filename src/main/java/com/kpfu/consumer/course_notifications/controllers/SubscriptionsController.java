@@ -22,7 +22,7 @@ public class SubscriptionsController {
         this.subscriptionRepository = subscriptionRepository;
     }
 
-    @PostMapping(value = "/subscript", consumes = "")
+    @PostMapping(value = "/subscript")
     public Subscription subscript(@RequestBody Subscription subscription) {
         subscription = subscriptionRepository.save(subscription);
         consumersComponent.newSubscription(subscription);
