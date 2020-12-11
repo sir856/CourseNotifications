@@ -40,17 +40,9 @@ public class ConsumersComponent {
 
         for (Subscription subscription : subscriptions) {
             logger.error(subscription.getId() + " : " + subscription.getTags().get(0).getClass());
-            containers.add(startContainer(subscription.getUserId(), message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()), toArray(subscription.getTags())));
+            containers.add(startContainer(subscription.getUserId(), message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()), subscription.getTags().toArray(new String[0])));
         }
 
-    }
-
-    private String[] toArray(List<String> list) {
-        String[] array = new String[list.size()];
-        for (int i = 0 ; i < list.size(); i++) {
-            array[i] = list.get(i);
-        }
-        return array;
     }
 
     private KafkaMessageListenerContainer<Integer, String> startContainer(int userId, MessageListener<Integer, String> listener, String... topics) {

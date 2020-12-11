@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.AttributeConverter;
+import java.util.ArrayList;
 import java.util.List;
 
 public class JsonArrayConverter implements AttributeConverter<List<String>, String> {
@@ -27,10 +28,18 @@ public class JsonArrayConverter implements AttributeConverter<List<String>, Stri
     @Override
     public List<String> convertToEntityAttribute(String s) {
         try {
-            return objectMapper.readValue(s, List.class);
+            return convertToStringList(objectMapper.readValue(s, List.class));
         } catch (Exception ex) {
             logger.error(ex.getMessage());
             return null;
         }
+    }
+
+    private List<String> convertToStringList(List list) {
+        List<String> stringList = new ArrayList<>();
+        for (Object item : list) {
+            stringList.add((String) item);
+        }
+        return stringList;
     }
 }
