@@ -39,7 +39,10 @@ public class ConsumersComponent {
         List<Subscription> subscriptions = subscriptionRepository.findAll();
 
         for (Subscription subscription : subscriptions) {
-            logger.debug(subscription.getId() + " : " + subscription.getTags());
+            logger.error(subscription.getId() + " : " + subscription.getTags());
+            if (subscription.getTags().size() == 0) {
+                continue;
+            }
             containers.add(startContainer(subscription.getUserId(), message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()), subscription.getTags().toArray(new String[subscription.getTags().size()])));
         }
 
