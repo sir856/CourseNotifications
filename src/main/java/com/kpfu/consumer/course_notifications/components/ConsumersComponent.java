@@ -5,7 +5,8 @@ import com.kpfu.consumer.course_notifications.repository.SubscriptionRepository;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.listener.AbstractMessageListenerContainer;
+import org.springframework.kafka.support.TopicPartitionOffset;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,8 @@ public class ConsumersComponent {
     }
 
     private KafkaMessageListenerContainer<Integer, String> startContainer(int userId, MessageListener<Integer, String> listener, String... topics) {
-        ContainerProperties containerProps = new ContainerProperties(topics);
+        ContainerProperties containerProps = inited ? new ContainerProperties(getTopicPartitionsOffsets(topics))
+                :  new ContainerProperties(topics);
         containerProps.setMessageListener(listener);
 
         Map<String, Object> props = new HashMap<>();
@@ -65,21 +67,17 @@ public class ConsumersComponent {
 
         DefaultKafkaConsumerFactory<Integer, String> cf =
                 new DefaultKafkaConsumerFactory<>(props);
-        if (inited) {
-            cf.createConsumer().seekToEnd(getTopicPartitions(topics));
-        }
-        KafkaMessageListenerContainer<Integer, String> container =
-                new KafkaMessageListenerContainer<>(cf, containerProps);
+        KafkaMessageListenerContainer<Integer, String> container = new KafkaMessageListenerContainer<>(cf, containerProps);
 
         container.setBeanName("container" + userId);
         container.start();
         return container;
     }
 
-    private Collection<TopicPartition> getTopicPartitions(String... topics) {
-        Collection<TopicPartition> topicPartitions = new ArrayList<>();
-        for (String topic : topics) {
-            topicPartitions.add(new TopicPartition(topic, 0));
+    private TopicPartitionOffset[] getTopicPartitionsOffsets(String... topics) {
+        TopicPartitionOffset[] topicPartitions = new TopicPartitionOffset[topics.length];
+        for (int i = 0; i < topics.length; i++) {
+            topicPartitions[i] = new TopicPartitionOffset(topics[i], 0, TopicPartitionOffset.SeekPosition.END);
         }
 
         return topicPartitions;
