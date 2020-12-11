@@ -1,7 +1,10 @@
 package com.kpfu.consumer.course_notifications.components;
 
+import com.kpfu.consumer.course_notifications.model.Subscription;
+import com.kpfu.consumer.course_notifications.repository.SubscriptionRepository;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.protocol.types.Field;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -29,20 +32,29 @@ public class ConsumersComponent {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private List<KafkaMessageListenerContainer<Integer, String>> containers = new ArrayList<>();
+    private final SubscriptionRepository subscriptionRepository;
 
-    @PostConstruct
-    public void init() throws InterruptedException {
-        log.info("Start init containers");
-        containers.add(startContainer("topic_1", "topic_2"));
-        containers.add(startContainer("topic_2", "topic_3"));
+    @Autowired
+    public ConsumersComponent(SubscriptionRepository subscriptionRepository) {
+        this.subscriptionRepository = subscriptionRepository;
     }
 
-    private KafkaMessageListenerContainer<Integer, String> startContainer(String... topics) {
+    @PostConstruct
+    public void init() {
+        log.info("Start init containers");
+
+        List<Subscription> subscriptions = subscriptionRepository.findAll();
+
+        for (Subscription subscription : subscriptions) {
+            containers.add(startContainer(message -> log.info("received for user " + subscription.getUserId() + " : "  + message.value()), subscription.getTags().toArray(new String[0])));
+        }
+
+    }
+
+    private KafkaMessageListenerContainer<Integer, String> startContainer(MessageListener<Integer, String> listener, String... topics) {
         int num = containers.size();
         ContainerProperties containerProps = new ContainerProperties(topics);
-        containerProps.setMessageListener((MessageListener<Integer, String>) message -> {
-            log.info("received from container" + num + " : "  + message);
-        });
+        containerProps.setMessageListener(listener);
         KafkaMessageListenerContainer<Integer, String> container = createContainer(containerProps);
         container.setBeanName("testAuto" + num);
         container.start();
