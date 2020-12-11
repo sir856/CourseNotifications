@@ -39,7 +39,6 @@ public class ConsumersComponent {
         List<Subscription> subscriptions = subscriptionRepository.findAll();
 
         for (Subscription subscription : subscriptions) {
-            logger.error(subscription.getId() + " : " + subscription.getTags().get(0).getClass());
             containers.add(startContainer(subscription.getUserId(), message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()), subscription.getTags().toArray(new String[0])));
         }
 
@@ -55,6 +54,7 @@ public class ConsumersComponent {
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
+        props.put(ConsumerConfig.CLIENT_ID_CONFIG, "consumer" + userId);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
