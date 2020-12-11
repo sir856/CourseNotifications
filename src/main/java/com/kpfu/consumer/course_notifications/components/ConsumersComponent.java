@@ -3,20 +3,13 @@ package com.kpfu.consumer.course_notifications.components;
 import com.kpfu.consumer.course_notifications.model.Subscription;
 import com.kpfu.consumer.course_notifications.repository.SubscriptionRepository;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.protocol.types.Field;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
-import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
@@ -30,7 +23,7 @@ import java.util.Map;
 @Component
 public class ConsumersComponent {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private List<KafkaMessageListenerContainer<Integer, String>> containers = new ArrayList<>();
     private final SubscriptionRepository subscriptionRepository;
 
@@ -41,13 +34,13 @@ public class ConsumersComponent {
 
     @PostConstruct
     public void init() {
-        log.info("Start init containers");
+        logger.info("Start init containers");
 
         List<Subscription> subscriptions = subscriptionRepository.findAll();
 
         for (Subscription subscription : subscriptions) {
-            log.debug(subscription.getId() + " : " + subscription.getTags());
-            containers.add(startContainer(subscription.getUserId(), message -> log.info("received for user " + subscription.getUserId() + " : "  + message.value()), subscription.getTags().toArray(new String[0])));
+            logger.debug(subscription.getId() + " : " + subscription.getTags());
+            containers.add(startContainer(subscription.getUserId(), message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()), subscription.getTags().toArray(new String[0])));
         }
 
     }

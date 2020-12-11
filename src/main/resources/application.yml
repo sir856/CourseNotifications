@@ -7,3 +7,7 @@ spring:
     url: jdbc:mysql://127.0.0.1:3306/subscript?serverVersion=8.0
     username: my-user
     password: +X%j5AW47
+logging:
+  file:
+    path: logs/
+    name: application.log
