@@ -40,7 +40,7 @@ public class ConsumersComponent {
 
         for (Subscription subscription : subscriptions) {
             logger.debug(subscription.getId() + " : " + subscription.getTags());
-            containers.add(startContainer(subscription.getUserId(), message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()), subscription.getTags().toArray(new String[0])));
+            containers.add(startContainer(subscription.getUserId(), message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()), subscription.getTags().toArray(new String[subscription.getTags().size()])));
         }
 
     }
