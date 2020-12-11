@@ -24,7 +24,7 @@ import java.util.Map;
 public class ConsumersComponent {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private List<KafkaMessageListenerContainer<Integer, String>> containers = new ArrayList<>();
+    private Map<Integer, KafkaMessageListenerContainer<Integer, String>> containers = new HashMap<>();
     private final SubscriptionRepository subscriptionRepository;
 
     @Autowired
@@ -39,7 +39,9 @@ public class ConsumersComponent {
         List<Subscription> subscriptions = subscriptionRepository.findAll();
 
         for (Subscription subscription : subscriptions) {
-            containers.add(startContainer(subscription.getUserId(), message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()), subscription.getTags().toArray(new String[0])));
+            containers.put(subscription.getUserId(), startContainer(subscription.getUserId(),
+                    message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()),
+                    subscription.getTags().toArray(new String[0])));
         }
 
     }
@@ -63,8 +65,24 @@ public class ConsumersComponent {
         KafkaMessageListenerContainer<Integer, String> container =
                 new KafkaMessageListenerContainer<>(cf, containerProps);
 
-        container.setBeanName("testAuto" + userId);
+        container.setBeanName("container" + userId);
         container.start();
         return container;
     }
+
+    private void newSubscripion(Subscription subscription) {
+        KafkaMessageListenerContainer<Integer, String> container = containers.get(subscription.getUserId());
+
+        if (container != null) {
+            container.stop();
+        }
+
+        containers.put(subscription.getUserId(), startContainer(subscription.getUserId(),
+                message -> logger.info("received for user " + subscription.getUserId() + " : "  + message.value()),
+                subscription.getTags().toArray(new String[0])));
+
+
+    }
+
+
 }
