@@ -3,9 +3,7 @@ package com.kpfu.consumer.course_notifications.components;
 import com.kpfu.consumer.course_notifications.model.Subscription;
 import com.kpfu.consumer.course_notifications.repository.SubscriptionRepository;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.TopicPartition;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.support.TopicPartitionOffset;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
@@ -20,19 +18,36 @@ import org.springframework.kafka.listener.MessageListener;
 import javax.annotation.PostConstruct;
 import java.util.*;
 
+
+/**
+ * Компонет, который отвечает за создание и управление потребителями в Apache Kafka
+ *
+ * @author Ильфат Саяхов
+ */
 @Component
 public class ConsumersComponent {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private Map<Integer, KafkaMessageListenerContainer<Integer, String>> containers = new HashMap<>();
     private final SubscriptionRepository subscriptionRepository;
-    private boolean inited = false;
+    private boolean initialized = false;
 
+    /**
+     * Конструктор для инъекции {@link SubscriptionRepository}
+     *
+     * @param subscriptionRepository
+     */
     @Autowired
     public ConsumersComponent(SubscriptionRepository subscriptionRepository) {
         this.subscriptionRepository = subscriptionRepository;
     }
 
+
+    /**
+     * Метод, который выполняется один раз, при старте сервера. В методе происходит запуск потребителей, сохраненных в базе данных.
+     * Для подключения к Apache Kafka потребителя создается контейнер {@link ConsumersComponent#startContainer(int, MessageListener, String...)}, с помощью которого можно управлять полученным подключением.
+     *
+     */
     @PostConstruct
     public void init() {
         logger.info("Start init containers");
@@ -45,12 +60,20 @@ public class ConsumersComponent {
                     subscription.getTags().toArray(new String[0])));
         }
 
-        inited = true;
-
+        initialized = true;
     }
 
+    /**
+     * Метод который создает и запускает контейнер для потребителя в Apache Kafka
+     *
+     * @param userId - id пользователя, для которого запускается контейнер
+     * @param listener - функция, которая выполяется при получении сообщения
+     * @param topics - топики, на которые нужно подписаться
+     * @return запущенный контейнер
+     */
+
     private KafkaMessageListenerContainer<Integer, String> startContainer(int userId, MessageListener<Integer, String> listener, String... topics) {
-        ContainerProperties containerProps = inited ? new ContainerProperties(getTopicPartitionsOffsets(topics))
+        ContainerProperties containerProps = initialized ? new ContainerProperties(getTopicPartitionsOffsets(topics))
                 :  new ContainerProperties(topics);
         containerProps.setMessageListener(listener);
 
@@ -74,6 +97,13 @@ public class ConsumersComponent {
         return container;
     }
 
+    /**
+     * Метод, который преобразует массив топиков, в массив топиков со смещением к концу
+     *
+     * @param topics
+     * @return массив топиков со смещением
+     */
+
     private TopicPartitionOffset[] getTopicPartitionsOffsets(String... topics) {
         TopicPartitionOffset[] topicPartitions = new TopicPartitionOffset[topics.length];
         for (int i = 0; i < topics.length; i++) {
@@ -82,6 +112,14 @@ public class ConsumersComponent {
 
         return topicPartitions;
     }
+
+    /**
+     * Метод, который добавляет нового потребителя с id {@link Subscription#getUserId()} и подписывает его на топики с названиями из списка {@link Subscription#getTags()}.
+     * Если потребитель с таким id уже существует, то его подписки меняются на новые
+     *
+     * @param subscription - описание потребителя
+     * @see Subscription
+     */
 
     public void newSubscription(Subscription subscription) {
         KafkaMessageListenerContainer<Integer, String> container = containers.get(subscription.getUserId());

@@ -13,6 +13,10 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>course_notifications</name>
 	<description>Send notifications about new courses to users by tags</description>
+	<packaging>jar</packaging>
+	<build>
+		<finalName>course-notifications</finalName>
+	</build>
 
 	<properties>
 		<java.version>1.8</java.version>
